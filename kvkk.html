@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sağlık Haritası · Aydınlatma Metni</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:   #f1f5f9;
+      --color-ink:     #1e293b;
+      --color-dim:     #475569;
+      --color-muted:   #5b6b81;
+      --color-accent:  #dc2626;
+      --color-line:    rgba(30,41,59,0.14);
+      --font-sans:     'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --font-serif:    'Instrument Serif', Georgia, 'Times New Roman', serif;
+      --font-mono:     'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    html { scrollbar-color: rgba(30,41,59,0.28) transparent; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      padding: 3rem 2rem;
+    }
+    ::selection { background: rgba(220,38,38,0.16); }
+    a { color: inherit; text-decoration-color: rgba(30,41,59,0.35); text-underline-offset: 0.18em; }
+    a:hover { text-decoration-color: var(--color-ink); }
+    a:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; border-radius: 2px; }
+
+    /* ── press marks (same layers as data-status.html) ── */
+    .plate { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .plate-inner { position: relative; height: 100%; width: 100%; }
+    .layer { position: absolute; left: 0; width: 100%; }
+    .layer svg { width: 100%; height: 100%; display: block; }
+    .marks-top    { top: 0;    aspect-ratio: 1905 / 720; opacity: 0.42; }
+    .marks-bottom { bottom: 0; aspect-ratio: 1905 / 282; opacity: 0.42; }
+
+    .frame { position: relative; z-index: 1; width: 100%; max-width: 900px; margin: 0 auto; }
+    .eyebrow {
+      font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--color-muted); margin-bottom: 0.4rem;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5625rem, 2.2vw + 0.8625rem, 2.0625rem);
+      font-weight: 400; letter-spacing: -0.02em; line-height: 1.15;
+      text-wrap: balance; margin-bottom: 0.5rem;
+    }
+    .lede {
+      font-family: var(--font-serif); font-style: italic; font-size: 1.2rem; line-height: 1.4;
+      color: var(--color-dim); max-width: 48ch;
+    }
+    .back { margin-top: 1rem; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    .back a { color: var(--color-muted); }
+    .back a:hover { color: var(--color-ink); }
+
+    .sheet {
+      margin-top: 1.4rem;
+      background: rgba(255,255,255,0.62);
+      border: 1px solid var(--color-line); border-radius: 6px;
+    }
+    .clause {
+      display: grid; grid-template-columns: 3rem 1fr; column-gap: 0.9rem;
+      padding: 1.1rem 1.25rem 1rem;
+    }
+    .clause + .clause { border-top: 1px solid rgba(30,41,59,0.09); }
+    .num {
+      font-family: var(--font-serif); font-size: 2.1rem; line-height: 1;
+      text-align: center; color: var(--color-muted); margin-top: -0.1rem;
+    }
+    .clause h2 {
+      font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3;
+      margin-bottom: 0.45rem;
+    }
+    .clause p, .clause li { font-size: 0.95rem; line-height: 1.6; max-width: 68ch; }
+    .clause p + p, .clause p + ul, .clause ul + p, .clause p + dl, .clause dl + p { margin-top: 0.55rem; }
+    .clause ul { padding-left: 1.1rem; }
+    .clause li + li { margin-top: 0.3rem; }
+    .clause li::marker { color: var(--color-muted); }
+    ol.rights { list-style: none; }
+    ol.rights li { display: grid; grid-template-columns: 1.6rem 1fr; gap: 0.3rem; }
+    ol.rights li + li { margin-top: 0.3rem; }
+    ol.rights .k { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 500; color: var(--color-muted); padding-top: 0.12rem; }
+    dl.cats { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: 0.45rem 1rem; max-width: 70ch; }
+    dl.cats dt {
+      font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-muted); padding-top: 0.22rem;
+    }
+    dl.cats dd { font-size: 0.95rem; line-height: 1.55; }
+    .ph {
+      font-family: var(--font-mono); font-size: 0.85em; font-weight: 500; letter-spacing: 0.02em;
+      color: var(--color-accent); background: rgba(220,38,38,0.05);
+      border: 1px dashed rgba(220,38,38,0.45); border-radius: 2px; padding: 0 0.25em;
+      white-space: nowrap;
+    }
+    .colophon {
+      display: flex; justify-content: space-between; gap: 0.4rem 1rem; flex-wrap: wrap;
+      margin-top: 1.3rem; padding-top: 0.65rem; border-top: 1px solid var(--color-line);
+      font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--color-muted);
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 1.6rem 1rem; }
+      .clause { grid-template-columns: 2.1rem 1fr; column-gap: 0.65rem; padding: 0.9rem 0.9rem 0.85rem; }
+      .num { font-size: 1.7rem; }
+      dl.cats { grid-template-columns: 1fr; gap: 0.1rem; }
+      dl.cats dd { margin-bottom: 0.5rem; }
+    }
+    @media print {
+      body { padding: 0; }
+      .plate, .back { display: none; }
+      .sheet { background: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="plate" aria-hidden="true">
+    <div class="plate-inner">
+      <div class="layer marks-top"><!-- marks-top:start --><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1905 720" width="100%" height="100%"
+     preserveAspectRatio="xMidYMin meet" role="presentation" aria-hidden="true" class="tcw-marks-top"><g><line x1="160" y1="10" x2="160" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="320" y1="10" x2="320" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="480" y1="10" x2="480" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="640" y1="10" x2="640" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="800" y1="10" x2="800" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="960" y1="10" x2="960" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1120" y1="10" x2="1120" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1280" y1="10" x2="1280" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1440" y1="10" x2="1440" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1600" y1="10" x2="1600" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1760" y1="10" x2="1760" y2="30" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="10" y1="160" x2="30" y2="160" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1875" y1="160" x2="1895" y2="160" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="10" y1="320" x2="30" y2="320" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1875" y1="320" x2="1895" y2="320" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="10" y1="480" x2="30" y2="480" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1875" y1="480" x2="1895" y2="480" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="10" y1="640" x2="30" y2="640" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1875" y1="640" x2="1895" y2="640" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><path d="M 24 64.06 L 24 24 L 64.06 24" fill="none" stroke="#16150F" stroke-width="0.65"/><path d="M 1881 64.06 L 1881 24 L 1840.94 24" fill="none" stroke="#16150F" stroke-width="0.65"/><path d="M 235.56 568.09 L 235.56 528.03 L 275.62 528.03" fill="none" stroke="#16150F" stroke-width="0.5"/><path d="M 1669.44 568.09 L 1669.44 528.03 L 1629.38 528.03" fill="none" stroke="#16150F" stroke-width="0.5"/><circle cx="900.67" cy="294.52" r="10.85" fill="none" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="882.23" y1="294.52" x2="919.1" y2="294.52" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="900.67" y1="276.08" x2="900.67" y2="312.96" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><circle cx="954.83" cy="388.22" r="9.55" fill="none" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="938.59" y1="388.22" x2="971.06" y2="388.22" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="954.83" y1="371.99" x2="954.83" y2="404.46" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><circle cx="1191.86" cy="84.3" r="6.22" fill="none" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="1181.28" y1="84.3" x2="1202.43" y2="84.3" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="1191.86" y1="73.73" x2="1191.86" y2="94.88" stroke="#16150F" stroke-width="0.5" opacity="0.9"/></g></svg><!-- marks-top:end --></div>
+      <div class="layer marks-bottom"><!-- marks-bottom:start --><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 720 1905 282" width="100%" height="100%"
+     preserveAspectRatio="xMidYMax meet" role="presentation" aria-hidden="true" class="tcw-marks-bottom"><g><line x1="160" y1="972" x2="160" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="320" y1="972" x2="320" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="480" y1="972" x2="480" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="640" y1="972" x2="640" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="800" y1="972" x2="800" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="960" y1="972" x2="960" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1120" y1="972" x2="1120" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1280" y1="972" x2="1280" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1440" y1="972" x2="1440" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1600" y1="972" x2="1600" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1760" y1="972" x2="1760" y2="992" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="10" y1="800" x2="30" y2="800" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><line x1="1875" y1="800" x2="1895" y2="800" stroke="#16150F" stroke-width="0.5" opacity="0.85"/><path d="M 24 937.94 L 24 978 L 64.06 978" fill="none" stroke="#16150F" stroke-width="0.65"/><path d="M 1881 937.94 L 1881 978 L 1840.94 978" fill="none" stroke="#16150F" stroke-width="0.65"/><path d="M 235.56 938.54 L 235.56 978.6 L 275.62 978.6" fill="none" stroke="#16150F" stroke-width="0.5"/><path d="M 1669.44 938.54 L 1669.44 978.6 L 1629.38 978.6" fill="none" stroke="#16150F" stroke-width="0.5"/><circle cx="282.76" cy="835.1" r="6.16" fill="none" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="272.29" y1="835.1" x2="293.24" y2="835.1" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="282.76" y1="824.63" x2="282.76" y2="845.57" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><circle cx="1188.57" cy="951.2" r="7.29" fill="none" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="1176.19" y1="951.2" x2="1200.96" y2="951.2" stroke="#16150F" stroke-width="0.5" opacity="0.9"/><line x1="1188.57" y1="938.82" x2="1188.57" y2="963.59" stroke="#16150F" stroke-width="0.5" opacity="0.9"/></g></svg><!-- marks-bottom:end --></div>
+    </div>
+  </div>
+
+  <main class="frame">
+    <div class="eyebrow">Sağlık Haritası · KVKK</div>
+    <h1>Erişim talebi aydınlatma metni</h1>
+    <p class="lede">6698 sayılı Kişisel Verilerin Korunması Kanunu’nun 10. maddesi uyarınca, erişim talep formunda paylaştığınız kişisel veriler hakkında.</p>
+    <p class="back"><a href="sunum.html">Forma dön</a></p>
+
+    <div class="sheet">
+      <section class="clause" aria-labelledby="c1">
+        <div class="num" aria-hidden="true">1</div>
+        <div>
+          <h2 id="c1">Veri sorumlusu</h2>
+          <p>Kişisel verileriniz, veri sorumlusu sıfatıyla <span class="ph">[VERİ SORUMLUSU]</span> (adres: <span class="ph">[ADRES]</span>, e-posta: <a href="mailto:info@integrio.io">info@integrio.io</a>) tarafından aşağıda açıklanan şekilde işlenir. Bu metinde “biz” ifadesi veri sorumlusunu anlatır.</p>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c2">
+        <div class="num" aria-hidden="true">2</div>
+        <div>
+          <h2 id="c2">İşlenen kişisel veriler</h2>
+          <dl class="cats">
+            <dt>Kimlik</dt>
+            <dd>Ad ve soyad.</dd>
+            <dt>İletişim</dt>
+            <dd>E-posta adresi; paylaşmayı seçerseniz telefon numarası.</dd>
+            <dt>Mesleki</dt>
+            <dd>Çalıştığınız şirket ve göreviniz.</dd>
+            <dt>Talep süreci</dt>
+            <dd>Talebinizin tarihi ve aşaması (ör. görüşüldü, demo, erişim açıldı), sizinle yapılan görüşmelere ilişkin ekip notları, açık rıza verdiğiniz an, e-posta adresinizin doğrulanıp doğrulanmadığı.</dd>
+            <dt>Hesap güvenliği</dt>
+            <dd>Şifreniz (yalnızca geri döndürülemez biçimde, özetlenmiş/hash’lenmiş olarak saklanır; biz dahil kimse açık hâlini göremez), oturum ve giriş kayıtları, e-posta doğrulama bağlantısının özeti ve IP adresinizin tuzlanmış SHA-256 özeti (hash). Ham IP adresiniz saklanmaz; özet yalnızca aynı ağdan gelen çok sayıda denemeyi sınırlamak için kullanılır.</dd>
+          </dl>
+          <p>Formda istenmeyen hiçbir veriyi, özellikle sağlık verisi gibi özel nitelikli kişisel verileri paylaşmamanızı rica ederiz.</p>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c3">
+        <div class="num" aria-hidden="true">3</div>
+        <div>
+          <h2 id="c3">İşleme amaçları</h2>
+          <ul>
+            <li><strong>Erişim talebinizin değerlendirilmesi:</strong> talebinizi kaydetmek, ekibimizce incelemek ve Sağlık Haritası’na erişim verilip verilmeyeceğine karar vermek.</li>
+            <li><strong>Hesabınızın oluşturulması ve yürütülmesi:</strong> kayıt sırasında belirlediğiniz e-posta ve şifreyle hesap açmak, onaylandığında erişiminizi açmak, gerektiğinde kapatmak, oturumlarınızı yönetmek ve talep etmeniz hâlinde geçici şifre oluşturmak.</li>
+            <li><strong>Sizinle iletişim:</strong> talebinizle ilgili bilgi vermek, görüşme ya da demo planlamak, erişiminizin açıldığını bildirmek ve e-posta adresinizi doğrulamak.</li>
+            <li><strong>Bilgi güvenliği:</strong> formun ve hesabın kötüye kullanılmasını önlemek (ör. deneme sayısını sınırlamak) ve yetkisiz erişimi engellemek.</li>
+          </ul>
+          <p>Verileriniz bu amaçlar dışında kullanılmaz, satılmaz ve pazarlama listelerine eklenmez.</p>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c4">
+        <div class="num" aria-hidden="true">4</div>
+        <div>
+          <h2 id="c4">Toplama yöntemi ve hukuki sebepler</h2>
+          <p>Verileriniz, sunum sayfasındaki erişim talep formunu doldurmanızla elektronik ortamda ve otomatik yollarla; talep sürecindeki notlar ise ekibimizce toplanır. Hukuki sebepler (KVKK m. 5):</p>
+          <ul>
+            <li><strong>Sözleşmenin kurulması veya ifası</strong> (m. 5/2-c): hesabınızın açılması, erişiminizin açılıp kapatılması ve hesabın yürütülmesi.</li>
+            <li><strong>Meşru menfaat</strong> (m. 5/2-f): talebinizin değerlendirilmesi, sizinle iletişim kurulması ve kötüye kullanımın önlenmesi; temel hak ve özgürlüklerinize zarar vermemek kaydıyla.</li>
+            <li><strong>Hukuki yükümlülük</strong> (m. 5/2-ç): kişisel verilerin güvenliğine ilişkin yükümlülüklerimiz (KVKK m. 12) kapsamında güvenlik kayıtlarının tutulması.</li>
+            <li><strong>Açık rıza</strong> (m. 5/1 ve m. 9): formda işaretlediğiniz açık rıza; özellikle verilerinizin yurt dışındaki sunucularda saklanması ve yurt dışındaki hizmet sağlayıcılara aktarılması için.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c5">
+        <div class="num" aria-hidden="true">5</div>
+        <div>
+          <h2 id="c5">Aktarım ve yurt dışındaki hizmet sağlayıcılar</h2>
+          <p>Verileriniz, yalnızca yukarıdaki amaçlar için ve hizmetin gerektirdiği ölçüde, veri işleyen olarak çalışan şu hizmet sağlayıcılara aktarılır:</p>
+          <ul>
+            <li><strong>Supabase, Inc.</strong> — veritabanı, kimlik doğrulama ve sunucu fonksiyonları. Verileriniz Avrupa Birliği’nde, Almanya’nın Frankfurt bölgesindeki sunucularda saklanır.</li>
+            <li><strong>Resend, Inc.</strong> (Amerika Birleşik Devletleri) — e-posta gönderimi. Otomatik e-postalar başladığında, size gönderilecek e-postalar için ad ve e-posta adresiniz bu hizmete aktarılır.</li>
+          </ul>
+          <p>Bu aktarımlar KVKK m. 9 kapsamında yurt dışına aktarım niteliğindedir ve hizmet sağlayıcılarla yapılan standart sözleşmelere (m. 9/4) ve/veya formda verdiğiniz açık rızaya (m. 9/6-a) dayanır. Alıcı ülkelerde Türkiye’dekiyle aynı düzeyde koruma bulunmayabileceğini ve yabancı makamların hukukları uyarınca verilere erişim talep edebileceğini hatırlatırız. Bunların dışında verileriniz, yalnızca hukuken zorunlu olduğunda yetkili kamu kurum ve kuruluşlarıyla paylaşılır.</p>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c6">
+        <div class="num" aria-hidden="true">6</div>
+        <div>
+          <h2 id="c6">Saklama süresi</h2>
+          <ul>
+            <li>Talep ve hesap verileri: erişiminiz sürdüğü müddetçe; talebiniz reddedilir ya da erişiminiz sona ererse en geç 1 yıl içinde silinir, yok edilir veya anonim hâle getirilir.</li>
+            <li>IP adresi özetleri: deneme sınırı için gereken süre boyunca; en geç 30 gün içinde silinir.</li>
+            <li>E-posta doğrulama bağlantıları: 7 gün geçerlidir, ardından kullanılamaz.</li>
+          </ul>
+          <p>Hukuki bir uyuşmazlık ya da yasal saklama yükümlülüğü varsa veriler, bu durumun gerektirdiği süre boyunca saklanabilir. Silme talebinizi her zaman iletebilirsiniz (bkz. 7).</p>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c7">
+        <div class="num" aria-hidden="true">7</div>
+        <div>
+          <h2 id="c7">KVKK m. 11 kapsamındaki haklarınız</h2>
+          <p>Veri sorumlusuna başvurarak şu haklarınızı kullanabilirsiniz:</p>
+          <ol class="rights">
+            <li><span class="k">a)</span><span>Kişisel verilerinizin işlenip işlenmediğini öğrenme,</span></li>
+            <li><span class="k">b)</span><span>İşlenmişse buna ilişkin bilgi talep etme,</span></li>
+            <li><span class="k">c)</span><span>İşlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme,</span></li>
+            <li><span class="k">ç)</span><span>Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme,</span></li>
+            <li><span class="k">d)</span><span>Eksik veya yanlış işlenmişse düzeltilmesini isteme,</span></li>
+            <li><span class="k">e)</span><span>KVKK m. 7’de öngörülen şartlar çerçevesinde silinmesini veya yok edilmesini isteme,</span></li>
+            <li><span class="k">f)</span><span>(d) ve (e) bentlerindeki işlemlerin, verilerin aktarıldığı üçüncü kişilere bildirilmesini isteme,</span></li>
+            <li><span class="k">g)</span><span>İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme,</span></li>
+            <li><span class="k">ğ)</span><span>Kanuna aykırı işleme sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme.</span></li>
+          </ol>
+          <p>Açık rızanızı dilediğiniz zaman geri alabilirsiniz; geri alma, o ana kadar yapılan işlemeyi etkilemez. Rızanın geri alınması, hizmetin yurt dışındaki sunucular olmadan sunulamaması nedeniyle hesabınızın kapatılmasıyla sonuçlanabilir.</p>
+        </div>
+      </section>
+
+      <section class="clause" aria-labelledby="c8">
+        <div class="num" aria-hidden="true">8</div>
+        <div>
+          <h2 id="c8">Nasıl başvurursunuz?</h2>
+          <p>Başvurunuzu, Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ uyarınca Türkçe ve yazılı olarak <span class="ph">[ADRES]</span> adresine iletebilir; kayıtlı elektronik posta (KEP), güvenli elektronik imza ya da mobil imzayla veya bize daha önce bildirdiğiniz ve sistemimizde kayıtlı e-posta adresinizden <a href="mailto:info@integrio.io">info@integrio.io</a> adresine gönderebilirsiniz.</p>
+          <p>Başvurunuzda adınız soyadınız, yazılı başvurularda imzanız, T.C. kimlik numaranız (yabancıysanız uyruğunuz ve pasaport ya da kimlik numaranız), tebligata esas yerleşim yeri veya iş yeri adresiniz, varsa bildirime esas e-posta adresiniz, telefon ya da faks numaranız ve talebinizin konusu yer almalıdır.</p>
+          <p>Başvurunuzu niteliğine göre en kısa sürede ve en geç 30 gün içinde ücretsiz olarak sonuçlandırırız; işlemin ayrıca bir maliyet gerektirmesi hâlinde Kişisel Verileri Koruma Kurulu’nca belirlenen tarifedeki ücret alınabilir. Başvurunuzun reddedilmesi, verilen cevabı yetersiz bulmanız ya da süresinde cevap verilmemesi hâlinde, cevabı öğrendiğiniz tarihten itibaren 30 gün ve her hâlde başvuru tarihinden itibaren 60 gün içinde Kurul’a şikâyette bulunabilirsiniz (KVKK m. 14).</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="colophon">
+      <span>Sağlık Haritası · Aydınlatma metni</span>
+      <span>Son güncelleme: 4 Kasım 2026</span>
+    </footer>
+  </main>
+</body>
+</html>
